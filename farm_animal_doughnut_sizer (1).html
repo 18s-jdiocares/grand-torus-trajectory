@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE GRAND TORUS TRAJECTORY: Barnyard Pass-Through Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@400;600;700&family=Orbitron:wght@800;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            pink: '#FF6B8B',
+                            lightPink: '#FFE3E8',
+                            purple: '#845EC2',
+                            yellow: '#FFC75F',
+                            dough: '#FBE8A6',
+                            brown: '#8B5A2B',
+                            neonPink: '#FF007F',
+                            neonGold: '#FFD700'
+                        }
+                    },
+                    fontFamily: {
+                        display: ['"Fredoka One"', 'cursive'],
+                        epic: ['"Orbitron"', 'sans-serif'],
+                        body: ['Quicksand', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #FFF9F2;
+        }
+        .font-display {
+            font-family: 'Fredoka One', cursive;
+        }
+        .font-epic {
+            font-family: 'Orbitron', sans-serif;
+        }
+        /* Epic Glowing Title Animation */
+        .title-glow {
+            text-shadow: 0 0 12px rgba(255, 107, 139, 0.6), 0 0 25px rgba(255, 107, 139, 0.3);
+            background: linear-gradient(135deg, #FF6B8B 0%, #845EC2 50%, #FF9E9D 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .badge-pulse {
+            box-shadow: 0 0 10px rgba(255, 107, 139, 0.5);
+            animation: pulse-glow 2s infinite alternate;
+        }
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 8px rgba(255, 107, 139, 0.4); }
+            100% { box-shadow: 0 0 18px rgba(255, 107, 139, 0.8), 0 0 25px rgba(132, 94, 194, 0.5); }
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FFE3E8;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #FF6B8B;
+            border-radius: 4px;
+        }
+        /* Custom Range Slider */
+        input[type=range] {
+            accent-color: #FF6B8B;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 2px solid #FFE3E8;
+        }
+    </style>
+</head>
+<body class="text-gray-800 min-h-screen flex flex-col justify-between">
+
+    <!-- Navigation Header -->
+    <header class="bg-white/90 backdrop-blur-md sticky top-0 z-50 border-b border-pink-100 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center space-x-3 text-center sm:text-left">
+                <span class="text-4xl animate-bounce filter drop-shadow-md">🍩</span>
+                <div>
+                    <div class="flex items-center gap-2 justify-center sm:justify-start">
+                        <span class="badge-pulse text-[10px] font-epic uppercase font-extrabold bg-gradient-to-r from-pink-500 to-purple-600 text-white px-2.5 py-0.5 rounded-full tracking-wider">
+                            ⚡ TORUS SIMULATOR V2.0
+                        </span>
+                        <span class="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full border border-amber-200">
+                            LIVESTOCK EDITION
+                        </span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-epic font-black tracking-tight title-glow uppercase mt-0.5">
+                        THE GRAND TORUS TRAJECTORY
+                    </h1>
+                    <p class="text-xs text-gray-500 font-bold tracking-wide">Barnyard Donut Pass-Through & Clearance Engine</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <button id="soundToggle" onclick="toggleAudio()" class="p-2.5 rounded-2xl bg-pink-100 text-pink-600 hover:bg-pink-200 transition shadow-sm border border-pink-200" title="Toggle Sound Effects">
+                    <i class="fas font-bold fa-volume-up text-lg" id="soundIcon"></i>
+                </button>
+                <button onclick="resetToDefaults()" class="p-2.5 rounded-2xl bg-amber-100 text-amber-700 hover:bg-amber-200 transition shadow-sm border border-amber-200" title="Reset All Settings">
+                    <i class="fas fa-undo"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow w-full">
+        
+        <!-- Left Panel: Controls & Inputs -->
+        <div class="lg:col-span-5 space-y-6">
+            
+            <!-- Animal Selector Card -->
+            <div class="glass-panel p-5 rounded-3xl shadow-sm border border-pink-100 hover:shadow-md transition">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-lg font-display text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-paw text-pink-500"></i> 1. Select Farm Animal
+                    </h2>
+                    <span class="text-xs bg-pink-100 text-pink-700 px-2.5 py-1 rounded-full font-bold" id="animalCategoryTag">Standard</span>
+                </div>
+
+                <!-- Animal Grid Selection -->
+                <div class="grid grid-cols-4 gap-2 mb-4" id="animalGrid">
+                    <!-- Dynamic rendering via JavaScript -->
+                </div>
+
+                <!-- Custom Animal Input Toggle -->
+                <div class="pt-2 border-t border-gray-100">
+                    <button onclick="toggleCustomAnimalModal()" class="w-full text-center text-xs font-bold text-pink-600 hover:text-pink-700 py-1 flex items-center justify-center gap-1">
+                        <i class="fas fa-sliders-h"></i> Custom Dimensions / New Animal
+                    </button>
+                </div>
+            </div>
+
+            <!-- Doughnut Configurator Card -->
+            <div class="glass-panel p-5 rounded-3xl shadow-sm border border-pink-100 hover:shadow-md transition space-y-4">
+                <h2 class="text-lg font-display text-gray-800 flex items-center gap-2">
+                    <i class="fas fa-cookie-bite text-amber-500"></i> 2. Doughnut Configurator
+                </h2>
+
+                <!-- Flavor Selector -->
+                <div>
+                    <label class="text-xs font-bold text-gray-600 uppercase tracking-wider block mb-2">Flavor & Style</label>
+                    <div class="grid grid-cols-3 gap-2" id="flavorGrid">
+                        <!-- Dynamic Flavors -->
+                    </div>
+                </div>
+
+                <!-- Safety Buffer Level -->
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs font-bold text-gray-600 uppercase tracking-wider">Hole Fit Clearance</label>
+                        <span class="text-xs font-bold text-pink-600 bg-pink-50 px-2 py-0.5 rounded-md" id="bufferLabel">Comfortable (+20%)</span>
+                    </div>
+                    <input type="range" id="bufferSlider" min="0" max="50" value="20" class="w-full h-2 bg-pink-100 rounded-lg appearance-none cursor-pointer">
+                    <div class="flex justify-between text-[10px] text-gray-400 font-semibold mt-1">
+                        <span>Tight Fit (0%)</span>
+                        <span>Comfortable (20%)</span>
+                        <span>Extra Sprinkles (50%)</span>
+                    </div>
+                </div>
+
+                <!-- Dough Ratio / Thickness -->
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs font-bold text-gray-600 uppercase tracking-wider">Dough Thickness Ratio</label>
+                        <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md" id="ratioLabel">Standard Yeast (1:1)</span>
+                    </div>
+                    <input type="range" id="ratioSlider" min="50" max="200" value="100" step="10" class="w-full h-2 bg-amber-100 rounded-lg appearance-none cursor-pointer">
+                    <div class="flex justify-between text-[10px] text-gray-400 font-semibold mt-1">
+                        <span>Slim Glazed</span>
+                        <span>Standard Yeast</span>
+                        <span>Extra Thicc Stuffed</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calculated Metrics Overview -->
+            <div class="bg-gradient-to-br from-pink-500 to-rose-400 text-white p-5 rounded-3xl shadow-lg relative overflow-hidden">
+                <div class="absolute -right-4 -bottom-4 opacity-10 text-9xl font-display select-none">🍩</div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-pink-100 mb-1">Required Outer Dimensions</h3>
+                <div class="flex items-baseline space-x-2 mb-3">
+                    <span class="text-4xl font-display" id="totalDiameterText">0.0</span>
+                    <span class="text-lg font-bold text-pink-100" id="totalDiameterUnit">ft</span>
+                    <span class="text-xs text-pink-200">Total Diameter</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 pt-3 border-t border-pink-400/40 text-sm">
+                    <div>
+                        <p class="text-xs text-pink-100 font-medium">Hole Diameter (Pass-thru)</p>
+                        <p class="text-xl font-display text-white" id="holeDiameterText">0.0 ft</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-pink-100 font-medium">Ring Thickness</p>
+                        <p class="text-xl font-display text-white" id="ringThicknessText">0.0 ft</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Panel: Interactive Canvas & Detailed Fun Stats -->
+        <div class="lg:col-span-7 space-y-6 flex flex-col">
+            
+            <!-- Visual Canvas Container -->
+            <div class="glass-panel p-4 rounded-3xl shadow-sm border border-pink-100 flex-grow flex flex-col relative overflow-hidden min-h-[420px]">
+                
+                <!-- Canvas Toolbar Header -->
+                <div class="flex justify-between items-center mb-2 z-10">
+                    <div class="flex items-center gap-2">
+                        <span class="font-display text-gray-700 text-base" id="canvasTitle">Visualizing Chicken in Glazed Donut</span>
+                    </div>
+                    <div class="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1 shadow-xs">
+                        <button onclick="adjustZoom(0.1)" class="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-600 font-bold" title="Zoom In">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+                        <button onclick="adjustZoom(-0.1)" class="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-600 font-bold" title="Zoom Out">
+                            <i class="fas fa-search-minus"></i>
+                        </button>
+                        <button onclick="resetZoom()" class="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600" title="Reset View">
+                            100%
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Canvas Wrapper -->
+                <div class="relative flex-grow rounded-2xl overflow-hidden bg-gradient-to-b from-blue-50 to-amber-50 border border-gray-100 flex items-center justify-center cursor-grab active:cursor-grabbing" id="canvasContainer">
+                    <canvas id="doughnutCanvas" class="w-full h-full block"></canvas>
+                    
+                    <!-- Overlay Scale Badge -->
+                    <div class="absolute bottom-3 right-3 bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-gray-200 text-xs font-bold text-gray-600 shadow-xs flex items-center gap-2">
+                        <i class="fas fa-ruler-combined text-pink-500"></i>
+                        <span id="scaleRatioText">Scale: 1px = 0.5 in</span>
+                    </div>
+
+                    <!-- Canvas Interactive Tip -->
+                    <div class="absolute top-3 left-3 bg-white/70 backdrop-blur-sm px-2.5 py-1 rounded-lg text-[11px] font-semibold text-gray-500 border border-gray-200">
+                        💡 Scroll to Zoom • Drag to Pan
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fun Stats & Bakery Calculations -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                
+                <!-- Equivalent Doughnuts -->
+                <div class="glass-panel p-4 rounded-2xl border border-amber-100 flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-amber-600 uppercase">Donut Count</span>
+                        <i class="fas fa-boxes text-amber-400"></i>
+                    </div>
+                    <div class="my-2">
+                        <span class="text-2xl font-display text-gray-800" id="equivDonutsText">0</span>
+                        <span class="text-xs font-semibold text-gray-500"> regular donuts</span>
+                    </div>
+                    <p class="text-[11px] text-gray-400">Based on volume of a standard 3.5" glazed donut.</p>
+                </div>
+
+                <!-- Ingredients Estimate -->
+                <div class="glass-panel p-4 rounded-2xl border border-pink-100 flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-pink-600 uppercase">Flour & Sugar</span>
+                        <i class="fas fa-mortar-pestle text-pink-400"></i>
+                    </div>
+                    <div class="my-2">
+                        <span class="text-2xl font-display text-gray-800" id="flourWeightText">0 lbs</span>
+                        <p class="text-xs font-semibold text-pink-500" id="sugarWeightText">+0 lbs Sugar & Glaze</p>
+                    </div>
+                    <p class="text-[11px] text-gray-400">Ingredients needed to mix this massive dough.</p>
+                </div>
+
+                <!-- Est Calories -->
+                <div class="glass-panel p-4 rounded-2xl border border-red-100 flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-red-600 uppercase">Calorie Bomb</span>
+                        <i class="fas fa-fire text-red-400"></i>
+                    </div>
+                    <div class="my-2">
+                        <span class="text-2xl font-display text-gray-800" id="calorieText">0</span>
+                        <span class="text-xs font-semibold text-gray-500"> kcal</span>
+                    </div>
+                    <p class="text-[11px] text-gray-400">Enough energy to power a barn for a week!</p>
+                </div>
+            </div>
+
+            <!-- Baking Danger Level Card -->
+            <div class="bg-amber-50 border-2 border-amber-200 p-4 rounded-2xl flex items-start gap-4">
+                <div class="text-3xl p-2 bg-amber-200/50 rounded-xl" id="dangerEmoji">⚠️</div>
+                <div class="flex-grow">
+                    <div class="flex justify-between items-center mb-1">
+                        <h4 class="font-display text-amber-900 text-sm" id="dangerLevelTitle">Baking Danger Rating: Low</h4>
+                        <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-amber-200 text-amber-800" id="dangerBadge">Kitchen Friendly</span>
+                    </div>
+                    <p class="text-xs text-amber-800 font-medium" id="dangerDescription">
+                        You can comfortably bake this using a standard home oven and a custom ring mold.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Modal for Adding Custom Animal Dimensions -->
+    <div id="customModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-pink-100 space-y-4 transform transition-all scale-95" id="modalCard">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-display text-xl text-gray-800">Add Custom Animal</h3>
+                <button onclick="toggleCustomAnimalModal()" class="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
+            </div>
+
+            <div class="space-y-3 text-sm">
+                <div>
+                    <label class="block font-bold text-gray-700 mb-1">Animal Name / Label</label>
+                    <input type="text" id="customName" placeholder="e.g. Giant Capybara" class="w-full border border-gray-300 rounded-xl p-2.5 focus:ring-2 focus:ring-pink-400 outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-1">Cross Section Width (in)</label>
+                        <input type="number" id="customWidth" value="24" min="1" class="w-full border border-gray-300 rounded-xl p-2.5 focus:ring-2 focus:ring-pink-400 outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-1">Cross Section Height (in)</label>
+                        <input type="number" id="customHeight" value="30" min="1" class="w-full border border-gray-300 rounded-xl p-2.5 focus:ring-2 focus:ring-pink-400 outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-gray-700 mb-1">Emoji Icon</label>
+                    <input type="text" id="customEmoji" placeholder="e.g. 🦙" value="🦙" class="w-full border border-gray-300 rounded-xl p-2.5 focus:ring-2 focus:ring-pink-400 outline-none">
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="toggleCustomAnimalModal()" class="px-4 py-2 rounded-xl text-gray-500 font-bold hover:bg-gray-100">Cancel</button>
+                <button onclick="applyCustomAnimal()" class="px-5 py-2 rounded-xl bg-pink-500 text-white font-bold hover:bg-pink-600 shadow-md">Apply Custom Animal</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-white border-t border-gray-100 py-3 text-center text-xs text-gray-400 mt-6">
+        <p>Barnyard Donut Sizer • Baked with precision & sugary love 🍩 • Interactive Physics & Bakery Estimator</p>
+    </footer>
+
+    <script>
+        // Default Farm Animals Preset Data
+        const FARM_ANIMALS = [
+            { id: 'chicken', name: 'Chicken', emoji: '🐔', widthInches: 8, heightInches: 10, category: 'Small' },
+            { id: 'turkey', name: 'Turkey', emoji: '🦃', widthInches: 12, heightInches: 14, category: 'Small' },
+            { id: 'rabbit', name: 'Bunny', emoji: '🐇', widthInches: 6, heightInches: 7, category: 'Small' },
+            { id: 'goat', name: 'Goat', emoji: '🐐', widthInches: 16, heightInches: 22, category: 'Medium' },
+            { id: 'sheep', name: 'Sheep', emoji: '🐑', widthInches: 20, heightInches: 24, category: 'Medium' },
+            { id: 'pig', name: 'Pig', emoji: '🐖', widthInches: 22, heightInches: 24, category: 'Medium' },
+            { id: 'alpaca', name: 'Alpaca', emoji: '🦙', widthInches: 18, heightInches: 32, category: 'Medium' },
+            { id: 'donkey', name: 'Donkey', emoji: '🫏', widthInches: 24, heightInches: 42, category: 'Large' },
+            { id: 'cow', name: 'Dairy Cow', emoji: '🐄', widthInches: 32, heightInches: 48, category: 'Large' },
+            { id: 'horse', name: 'Horse', emoji: '🐎', widthInches: 28, heightInches: 52, category: 'Large' },
+            { id: 'bull', name: 'Big Bull', emoji: '🐂', widthInches: 38, heightInches: 54, category: 'Mega' },
+            { id: 'draft_horse', name: 'Giant Draft Horse', emoji: '🐴', widthInches: 42, heightInches: 64, category: 'Mega' }
+        ];
+
+        // Doughnut Flavor Styles Definition
+        const FLAVORS = [
+            { id: 'glazed', name: 'Glazed', bg: '#D99B56', icing: '#FFF3E0', sprinkles: false },
+            { id: 'chocolate', name: 'Chocolate', bg: '#8D5B4C', icing: '#4A2E2B', sprinkles: true },
+            { id: 'strawberry', name: 'Strawberry', bg: '#D99B56', icing: '#FF80AB', sprinkles: true },
+            { id: 'boston', name: 'Boston Cream', bg: '#D99B56', icing: '#3E2723', sprinkles: false },
+            { id: 'jelly', name: 'Powdered', bg: '#E5C396', icing: '#FFFFFF', sprinkles: false },
+            { id: 'matcha', name: 'Matcha', bg: '#D99B56', icing: '#A8E6CF', sprinkles: true }
+        ];
+
+        // State Object
+        let state = {
+            selectedAnimal: FARM_ANIMALS[8], // Cow by default
+            selectedFlavor: FLAVORS[0],
+            bufferPercent: 20,
+            thicknessRatio: 1.0, // multiplier for ring width
+            audioEnabled: true,
+            zoomLevel: 1.0,
+            panOffset: { x: 0, y: 0 }
+        };
+
+        // Web Audio Context for Sound Effects
+        let audioCtx = null;
+
+        function playSynthesizedSound(type) {
+            if (!state.audioEnabled) return;
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'pop') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.08);
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.08);
+                } else if (type === 'slide') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(350, audioCtx.currentTime + 0.05);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.05);
+                }
+            } catch(e) {
+                // Audio might be blocked by browser policy
+            }
+        }
+
+        function initUI() {
+            renderAnimalGrid();
+            renderFlavorGrid();
+            setupEventListeners();
+            updateCalculationsAndCanvas();
+        }
+
+        function renderAnimalGrid() {
+            const grid = document.getElementById('animalGrid');
+            grid.innerHTML = '';
+            FARM_ANIMALS.forEach(animal => {
+                const isSelected = animal.id === state.selectedAnimal.id;
+                const btn = document.createElement('button');
+                btn.className = `p-2.5 rounded-2xl border flex flex-col items-center justify-center transition-all ${
+                    isSelected 
+                        ? 'bg-pink-500 text-white border-pink-600 shadow-md scale-105' 
+                        : 'bg-white hover:bg-pink-50 text-gray-700 border-gray-200'
+                }`;
+                btn.onclick = () => {
+                    state.selectedAnimal = animal;
+                    playSynthesizedSound('pop');
+                    renderAnimalGrid();
+                    updateCalculationsAndCanvas();
+                };
+
+                btn.innerHTML = `
+                    <span class="text-2xl mb-1">${animal.emoji}</span>
+                    <span class="text-[11px] font-bold tracking-tight truncate w-full text-center">${animal.name}</span>
+                `;
+                grid.appendChild(btn);
+            });
+
+            document.getElementById('animalCategoryTag').innerText = state.selectedAnimal.category;
+        }
+
+        function renderFlavorGrid() {
+            const grid = document.getElementById('flavorGrid');
+            grid.innerHTML = '';
+            FLAVORS.forEach(flavor => {
+                const isSelected = flavor.id === state.selectedFlavor.id;
+                const btn = document.createElement('button');
+                btn.className = `p-2 rounded-xl border flex items-center gap-2 transition ${
+                    isSelected ? 'border-pink-500 bg-pink-50 ring-2 ring-pink-300' : 'border-gray-200 bg-white hover:bg-gray-50'
+                }`;
+                btn.onclick = () => {
+                    state.selectedFlavor = flavor;
+                    playSynthesizedSound('pop');
+                    renderFlavorGrid();
+                    updateCalculationsAndCanvas();
+                };
+
+                btn.innerHTML = `
+                    <span class="w-4 h-4 rounded-full inline-block border border-black/10 shadow-xs" style="background-color: ${flavor.icing}"></span>
+                    <span class="text-xs font-bold text-gray-700 truncate">${flavor.name}</span>
+                `;
+                grid.appendChild(btn);
+            });
+        }
+
+        function setupEventListeners() {
+            const bufferSlider = document.getElementById('bufferSlider');
+            const ratioSlider = document.getElementById('ratioSlider');
+
+            bufferSlider.oninput = (e) => {
+                state.bufferPercent = parseInt(e.target.value);
+                document.getElementById('bufferLabel').innerText = `${getBufferText(state.bufferPercent)} (+${state.bufferPercent}%)`;
+                playSynthesizedSound('slide');
+                updateCalculationsAndCanvas();
+            };
+
+            ratioSlider.oninput = (e) => {
+                state.thicknessRatio = parseInt(e.target.value) / 100;
+                document.getElementById('ratioLabel').innerText = `${getRatioText(state.thicknessRatio)}`;
+                playSynthesizedSound('slide');
+                updateCalculationsAndCanvas();
+            };
+
+            // Canvas Interaction (Pan & Zoom)
+            const canvas = document.getElementById('doughnutCanvas');
+            let isDragging = false;
+            let startX, startY;
+
+            canvas.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startX = e.clientX - state.panOffset.x;
+                startY = e.clientY - state.panOffset.y;
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                state.panOffset.x = e.clientX - startX;
+                state.panOffset.y = e.clientY - startY;
+                drawCanvas();
+            });
+
+            window.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoomFactor = e.deltaY < 0 ? 1.05 : 0.95;
+                state.zoomLevel = Math.max(0.4, Math.min(3.0, state.zoomLevel * zoomFactor));
+                drawCanvas();
+            }, { passive: false });
+        }
+
+        function getBufferText(val) {
+            if (val < 10) return "Tight Fit";
+            if (val < 30) return "Comfortable";
+            return "Extra Sprinkles";
+        }
+
+        function getRatioText(val) {
+            if (val < 0.8) return "Slim Glazed";
+            if (val <= 1.2) return "Standard Yeast";
+            return "Extra Thicc";
+        }
+
+        function calculateMetrics() {
+            const animal = state.selectedAnimal;
+            
+            // Effective max dimension needed for animal to pass through hole
+            // Standard bounding diagonal / max dimension for cross section clearance
+            const animalMaxDimension = Math.max(animal.widthInches, animal.heightInches);
+            
+            // Hole Diameter needed = Max Dimension * (1 + bufferPercent)
+            const holeDiameterInches = animalMaxDimension * (1 + state.bufferPercent / 100);
+            
+            // Ring thickness standard is proportional to hole size, multiplied by user ratio
+            // Standard donut ratio: Hole is roughly 35% of total diameter, ring thickness is roughly 32.5% on each side
+            const baseRingThickness = holeDiameterInches * 0.75 * state.thicknessRatio;
+            
+            // Total Outer Diameter = Hole + (2 * Ring Thickness)
+            const totalDiameterInches = holeDiameterInches + (2 * baseRingThickness);
+
+            // Volume Calculation (Torus formula: V = 2 * pi^2 * R * r^2)
+            // R = Major Radius (from center of hole to center of tube)
+            // r = Minor Radius (radius of the dough tube itself)
+            const R_inches = (holeDiameterInches / 2) + (baseRingThickness / 2);
+            const r_inches = baseRingThickness / 2;
+            const volumeCubicInches = 2 * Math.pow(Math.PI, 2) * R_inches * Math.pow(r_inches, 2);
+
+            // Standard Donut: 3.5" outer, 1.2" hole -> R = 1.175", r = 0.575"
+            const stdVolume = 2 * Math.pow(Math.PI, 2) * 1.175 * Math.pow(0.575, 2); // ~7.66 cu in
+            const equivDonuts = Math.round(volumeCubicInches / stdVolume);
+
+            // Weight & Ingredient estimations (Density roughly 0.015 lbs per cubic inch cooked yeast donut)
+            const totalWeightLbs = volumeCubicInches * 0.015;
+            const flourLbs = Math.round(totalWeightLbs * 0.45);
+            const sugarLbs = Math.round(totalWeightLbs * 0.25);
+            const calories = Math.round(equivDonuts * 260); // 260 kcal per std glazed donut
+
+            return {
+                holeDiameterFt: (holeDiameterInches / 12).toFixed(2),
+                holeDiameterInches: holeDiameterInches.toFixed(1),
+                totalDiameterFt: (totalDiameterInches / 12).toFixed(2),
+                totalDiameterInches: totalDiameterInches.toFixed(1),
+                ringThicknessFt: (baseRingThickness / 12).toFixed(2),
+                ringThicknessInches: baseRingThickness.toFixed(1),
+                equivDonuts: equivDonuts.toLocaleString(),
+                flourLbs: flourLbs.toLocaleString(),
+                sugarLbs: sugarLbs.toLocaleString(),
+                calories: calories.toLocaleString(),
+                totalWeightLbs: Math.round(totalWeightLbs)
+            };
+        }
+
+        function updateCalculationsAndCanvas() {
+            const metrics = calculateMetrics();
+
+            // Update UI Labels
+            document.getElementById('totalDiameterText').innerText = metrics.totalDiameterFt;
+            document.getElementById('holeDiameterText').innerText = `${metrics.holeDiameterFt} ft (${metrics.holeDiameterInches}")`;
+            document.getElementById('ringThicknessText').innerText = `${metrics.ringThicknessFt} ft (${metrics.ringThicknessInches}")`;
+            
+            document.getElementById('equivDonutsText').innerText = metrics.equivDonuts;
+            document.getElementById('flourWeightText').innerText = `${metrics.flourLbs} lbs Flour`;
+            document.getElementById('sugarWeightText').innerText = `+${metrics.sugarLbs} lbs Sugar & Glaze`;
+            document.getElementById('calorieText').innerText = metrics.calories;
+
+            document.getElementById('canvasTitle').innerText = `${state.selectedAnimal.name} in Giant ${state.selectedFlavor.name} Donut`;
+
+            updateDangerLevel(parseFloat(metrics.totalDiameterFt));
+            drawCanvas();
+        }
+
+        function updateDangerLevel(totalFt) {
+            const emoji = document.getElementById('dangerEmoji');
+            const title = document.getElementById('dangerLevelTitle');
+            const badge = document.getElementById('dangerBadge');
+            const desc = document.getElementById('dangerDescription');
+
+            if (totalFt < 3) {
+                emoji.innerText = "🟢";
+                title.innerText = "Baking Danger Rating: Very Low";
+                badge.innerText = "Home Kitchen";
+                badge.className = "text-xs font-bold px-2 py-0.5 rounded-md bg-green-200 text-green-800";
+                desc.innerText = "Can easily be baked in a standard home kitchen or large Dutch oven!";
+            } else if (totalFt < 8) {
+                emoji.innerText = "🟡";
+                title.innerText = "Baking Danger Rating: Moderate";
+                badge.innerText = "Bakery Scale";
+                badge.className = "text-xs font-bold px-2 py-0.5 rounded-md bg-yellow-200 text-yellow-800";
+                desc.innerText = "Requires a commercial bakery oven and a small forklift to flip safely.";
+            } else if (totalFt < 20) {
+                emoji.innerText = "🟠";
+                title.innerText = "Baking Danger Rating: High";
+                badge.innerText = "Industrial Hazard";
+                badge.className = "text-xs font-bold px-2 py-0.5 rounded-md bg-orange-200 text-orange-800";
+                desc.innerText = "Requires an industrial cement mixer for dough and a localized crane operator.";
+            } else {
+                emoji.innerText = "🚨";
+                title.innerText = "Baking Danger Rating: Gravitational Threat";
+                badge.innerText = "Guinness World Record";
+                badge.className = "text-xs font-bold px-2 py-0.5 rounded-md bg-red-200 text-red-800";
+                desc.innerText = "Warning: May collapse under its own weight or attract wild wildlife from neighboring states.";
+            }
+        }
+
+        function drawCanvas() {
+            const canvas = document.getElementById('doughnutCanvas');
+            const container = document.getElementById('canvasContainer');
+
+            // Responsive resolution fitting
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const metrics = calculateMetrics();
+            const totalInches = parseFloat(metrics.totalDiameterInches);
+            const holeInches = parseFloat(metrics.holeDiameterInches);
+            
+            // Calculate base visual scaling so donut fits nicely on canvas
+            const padding = 80;
+            const minDim = Math.min(canvas.width, canvas.height) - padding;
+            const scale = (minDim / totalInches) * state.zoomLevel;
+
+            document.getElementById('scaleRatioText').innerText = `Scale: 1px = ${(1/scale).toFixed(2)}"`;
+
+            const centerX = (canvas.width / 2) + state.panOffset.x;
+            const centerY = (canvas.height / 2) + state.panOffset.y;
+
+            const outerRadiusPX = (totalInches / 2) * scale;
+            const holeRadiusPX = (holeInches / 2) * scale;
+
+            ctx.save();
+
+            // 1. Draw Outer Donut Body (Dough Base)
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, outerRadiusPX, 0, Math.PI * 2, false);
+            ctx.arc(centerX, centerY, holeRadiusPX, 0, Math.PI * 2, true); // Cutout hole
+            ctx.fillStyle = state.selectedFlavor.bg;
+            ctx.shadowColor = 'rgba(0,0,0,0.15)';
+            ctx.shadowBlur = 20;
+            ctx.shadowOffsetY = 10;
+            ctx.fill();
+            ctx.shadowColor = 'transparent'; // Reset shadow
+
+            // 2. Draw Icing Top Layer
+            const icingOuterR = outerRadiusPX * 0.94;
+            const icingHoleR = holeRadiusPX * 1.06;
+
+            ctx.beginPath();
+            // Wavy icing effect around outer ring
+            const numWaves = 16;
+            for (let i = 0; i <= numWaves; i++) {
+                const angle = (i / numWaves) * Math.PI * 2;
+                const waveOffset = Math.sin(i * 3) * (outerRadiusPX * 0.04);
+                const r = icingOuterR + waveOffset;
+                const x = centerX + Math.cos(angle) * r;
+                const y = centerY + Math.sin(angle) * r;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            // Inner cutout wavy icing
+            for (let i = numWaves; i >= 0; i--) {
+                const angle = (i / numWaves) * Math.PI * 2;
+                const waveOffset = Math.cos(i * 2) * (holeRadiusPX * 0.04);
+                const r = icingHoleR + waveOffset;
+                const x = centerX + Math.cos(angle) * r;
+                const y = centerY + Math.sin(angle) * r;
+                ctx.lineTo(x, y);
+            }
+            ctx.fillStyle = state.selectedFlavor.icing;
+            ctx.fill();
+
+            // 3. Draw Sprinkles if enabled
+            if (state.selectedFlavor.sprinkles) {
+                const sprinkleColors = ['#FF4081', '#FFEB3B', '#00E676', '#00E5FF', '#FFFFFF'];
+                const numSprinkles = Math.floor(outerRadiusPX * 0.8);
+                
+                for (let i = 0; i < numSprinkles; i++) {
+                    const angle = (i * 137.5) * (Math.PI / 180); // Golden ratio distribution
+                    const distRatio = 0.3 + (i % 5) * 0.12;
+                    const r = holeRadiusPX + (outerRadiusPX - holeRadiusPX) * distRatio;
+                    
+                    const sx = centerX + Math.cos(angle) * r;
+                    const sy = centerY + Math.sin(angle) * r;
+                    
+                    ctx.save();
+                    ctx.translate(sx, sy);
+                    ctx.rotate(angle);
+                    ctx.fillStyle = sprinkleColors[i % sprinkleColors.length];
+                    ctx.beginPath();
+                    ctx.roundRect(-4, -1.5, 8, 3, 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+
+            // 4. Draw Animal in the Hole Center
+            const animal = state.selectedAnimal;
+            const animalWidthPX = animal.widthInches * scale;
+            const animalHeightPX = animal.heightInches * scale;
+
+            // Draw Animal Fitting Clearance Box/Ellipse
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY, animalWidthPX / 2, animalHeightPX / 2, 0, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255, 107, 139, 0.4)';
+            ctx.setLineDash([4, 4]);
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset line dash
+
+            // Render Animal Emoji / Icon Centered
+            const emojiFontSize = Math.min(animalWidthPX, animalHeightPX) * 0.85;
+            ctx.font = `${Math.max(16, emojiFontSize)}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(animal.emoji, centerX, centerY + 2);
+
+            // 5. Dimension Callouts & Ruler Lines
+            drawDimensionRulers(ctx, centerX, centerY, outerRadiusPX, holeRadiusPX, metrics);
+
+            ctx.restore();
+        }
+
+        function drawDimensionRulers(ctx, cx, cy, outerR, holeR, metrics) {
+            ctx.strokeStyle = '#64748B';
+            ctx.fillStyle = '#1E293B';
+            ctx.lineWidth = 1.5;
+
+            // Total Outer Diameter Ruler (Top Horiz)
+            const topY = cy - outerR - 25;
+            ctx.beginPath();
+            ctx.moveTo(cx - outerR, topY);
+            ctx.lineTo(cx + outerR, topY);
+            // End Ticks
+            ctx.moveTo(cx - outerR, topY - 6); ctx.lineTo(cx - outerR, topY + 6);
+            ctx.moveTo(cx + outerR, topY - 6); ctx.lineTo(cx + outerR, topY + 6);
+            ctx.stroke();
+
+            // Label Outer Diameter
+            ctx.font = 'bold 12px Quicksand, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#0F172A';
+            ctx.fillText(`Outer Donut: ${metrics.totalDiameterFt} ft`, cx, topY - 8);
+
+            // Hole Diameter Ruler (Center Horiz)
+            const holeY = cy;
+            ctx.strokeStyle = '#FF6B8B';
+            ctx.beginPath();
+            ctx.moveTo(cx - holeR, holeY);
+            ctx.lineTo(cx + holeR, holeY);
+            // End Ticks
+            ctx.moveTo(cx - holeR, holeY - 5); ctx.lineTo(cx - holeR, holeY + 5);
+            ctx.moveTo(cx + holeR, holeY - 5); ctx.lineTo(cx + holeR, holeY + 5);
+            ctx.stroke();
+
+            // Hole Label Badge
+            ctx.fillStyle = '#FF6B8B';
+            ctx.fillText(`Hole Pass-Thru: ${metrics.holeDiameterFt} ft`, cx, holeY - 8);
+        }
+
+        function adjustZoom(delta) {
+            state.zoomLevel = Math.max(0.4, Math.min(3.0, state.zoomLevel + delta));
+            drawCanvas();
+        }
+
+        function resetZoom() {
+            state.zoomLevel = 1.0;
+            state.panOffset = { x: 0, y: 0 };
+            drawCanvas();
+        }
+
+        function toggleAudio() {
+            state.audioEnabled = !state.audioEnabled;
+            const icon = document.getElementById('soundIcon');
+            icon.className = state.audioEnabled ? "fas fa-volume-up text-lg" : "fas fa-volume-mute text-lg text-gray-400";
+        }
+
+        function resetToDefaults() {
+            state.bufferPercent = 20;
+            state.thicknessRatio = 1.0;
+            state.selectedAnimal = FARM_ANIMALS[8]; // Cow
+            state.selectedFlavor = FLAVORS[0];
+            state.zoomLevel = 1.0;
+            state.panOffset = { x: 0, y: 0 };
+
+            document.getElementById('bufferSlider').value = 20;
+            document.getElementById('ratioSlider').value = 100;
+            document.getElementById('bufferLabel').innerText = "Comfortable (+20%)";
+            document.getElementById('ratioLabel').innerText = "Standard Yeast (1:1)";
+
+            renderAnimalGrid();
+            renderFlavorGrid();
+            updateCalculationsAndCanvas();
+        }
+
+        function toggleCustomAnimalModal() {
+            const modal = document.getElementById('customModal');
+            modal.classList.toggle('hidden');
+        }
+
+        function applyCustomAnimal() {
+            const name = document.getElementById('customName').value || "Custom Animal";
+            const width = parseFloat(document.getElementById('customWidth').value) || 20;
+            const height = parseFloat(document.getElementById('customHeight').value) || 20;
+            const emoji = document.getElementById('customEmoji').value || "🦙";
+
+            const customObj = {
+                id: 'custom_' + Date.now(),
+                name: name,
+                emoji: emoji,
+                widthInches: width,
+                heightInches: height,
+                category: 'Custom'
+            };
+
+            FARM_ANIMALS.unshift(customObj);
+            state.selectedAnimal = customObj;
+            toggleCustomAnimalModal();
+            renderAnimalGrid();
+            updateCalculationsAndCanvas();
+        }
+
+        // Initialize on load
+        window.onload = () => {
+            initUI();
+            window.addEventListener('resize', drawCanvas);
+        };
+    </script>
+</body>
+</html>
